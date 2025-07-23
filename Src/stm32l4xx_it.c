@@ -143,24 +143,17 @@ void DMA1_Channel7_IRQHandler(void)
   */
 void USART2_IRQHandler(void)
 {
-  HAL_UART_IRQHandler(&huart2);
-	
-	if (((USART2->ISR) & USART_ISR_RXNE) | (USART2->ISR & USART_ISR_ORE)){
-		USART2->ICR |= USART_ICR_ORECF;
+	// When complete sending data, invoke on_complete_transfer
+	if ((USART2->ISR & USART_ISR_RXNE) || (USART2->ISR & USART_ISR_ORE)){
+		USART2->ICR |= USART_ICR_ORECF;  // Clear overrun
+    uint8_t ch = USART2->RDR;
 		
 		// trigger motor
-		UART_motor_control(&huart2);
-	}
-	
-	// When complete sending data, invoke on_complete_transfer
-	if ((USART2->ISR)&USART_ISR_TC){
-		USART2->ICR |= USART_ICR_TCCF;  					// Clear the TC flag
-		DMA1_Channel7->CCR &=~ DMA_CCR_EN; 				// Clearing the flag
-		
-		// clear pending register
-		on_complete_transfer();
+		UART_motor_control(&huart2, ch);
 	} 
-
+	uint8_t ch = USART2->RDR;
+	
+	HAL_UART_IRQHandler(&huart2);
 }
 
 /**
@@ -172,9 +165,10 @@ void USART3_IRQHandler(void)
 	
 	if (((USART3->ISR) & USART_ISR_RXNE) | (USART3->ISR & USART_ISR_ORE)){
 		USART3->ICR |= USART_ICR_ORECF;
+		uint8_t ch = USART3->RDR;
 		
 		// trigger motor
-		UART_motor_control(&huart3);
+		UART_motor_control(&huart3, ch);
 	}
 	
 	// When complete sending data, invoke on_complete_transfer

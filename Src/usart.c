@@ -27,11 +27,10 @@ DMA_HandleTypeDef hdma_usart2_tx;
 DMA_HandleTypeDef hdma_usart3_tx;
 
 static volatile DMA_Channel_TypeDef *tx;
-static volatile uint8_t data_t_0[IO_SIZE];
-static volatile uint8_t data_t_1[IO_SIZE];
-static volatile uint8_t pending_size = 0;
-static volatile uint8_t *active = data_t_0;
-static volatile uint8_t *pending = data_t_1;
+static char active[IO_SIZE];
+static char pending[IO_SIZE];
+static uint32_t pending_size = 0;
+static uint8_t uart_busy = 0;
 
 
 
@@ -48,6 +47,9 @@ void MX_USART2_UART_Init(void)
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
   huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
   huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+	
+	__HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);  // enable RXNE interrupt
+
   if (HAL_UART_Init(&huart2) != HAL_OK)
   {
     Error_Handler();
@@ -229,6 +231,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
   }
 }
 
+/*
 void UART_print(char* data)
 {
 	uint32_t length = strlen(data);
@@ -266,7 +269,52 @@ void UART_print(char* data)
 		}
 		pending_size = length;
 	}
+	
+	//reset state
+	HAL_UART_TxCpltCallback(&huart2);
+	//HAL_UART_TxCpltCallback(&huart3);
 }
+*/
+
+void UART_print(char* data) {
+    uint32_t length = strlen(data);
+
+    if (!uart_busy) {
+        uart_busy = 1;
+        memcpy(active, data, length);
+        HAL_UART_Transmit_DMA(&huart2, (uint8_t*)active, length);
+    } else {
+        // DMA busy, save for later
+        memcpy(pending, data, length);
+        pending_size = length;
+    }
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+	  if (huart == &huart2) {
+        if (pending_size > 0) {
+            memcpy(active, pending, pending_size);
+            uint32_t size = pending_size;
+            pending_size = 0;
+            HAL_UART_Transmit_DMA(&huart2, (uint8_t*)active, size);
+        } else {
+            uart_busy = 0;
+        }
+    }
+    else if (huart == &huart3) {
+        if (pending_size > 0) {
+            memcpy(active, pending, pending_size);
+            uint32_t size = pending_size;
+            pending_size = 0;
+            HAL_UART_Transmit_DMA(&huart3, (uint8_t*)active, size);
+        } else {
+            uart_busy = 0;
+        }
+    }
+}
+
+
 
 void on_complete_transfer(void){
 		if (pending_size > 0) {

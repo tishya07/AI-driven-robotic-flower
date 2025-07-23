@@ -31,21 +31,27 @@ static uint8_t rx_data3;
 
 void SystemClock_Config(void);
 
-void UART_motor_control(UART_HandleTypeDef *huart){
+void UART_motor_control(UART_HandleTypeDef *huart, uint8_t rx_data){
 	 if (huart == &huart2){
-    if (rx_data2 == 'B' || rx_data2 == 'b')  //'B' triggers bloom
+    if (rx_data == 'B' || rx_data == 'b')  //'B' triggers bloom
     {
 				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2650);  // Servo rotates to ~180°
     }
-		else if (rx_data2 == 'C' || rx_data2 == 'c')  //'C' closes flower
+		else if (rx_data == 'C' || rx_data == 'c')  //'C' closes flower
     {
 				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 700);  // Servo back to ~0°
     }
+		else
+		{
+				//print error message
+				sprintf(buffer, "Command not recieved. Type 'b' or 'c'.\n");
+				UART_print(buffer);
+		}
+		
     // Continue UART listening
 		HAL_UART_Receive_IT(&huart2, &rx_data2, 1);
   }
-	 
-	 if (huart == &huart3){
+	else if (huart == &huart3){
     if (rx_data3 == 'B' || rx_data3 == 'b')  //'B' triggers bloom
     {
 				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2650);  // Servo rotates to ~180°
@@ -54,9 +60,23 @@ void UART_motor_control(UART_HandleTypeDef *huart){
     {
 				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 700);  // Servo back to ~0°
     }
+		else
+		{
+				//print error message
+				sprintf(buffer, "Command not recieved. Type 'b' or 'c'.\n");
+				UART_print(buffer);
+		}
+		
     // Continue UART listening
 		HAL_UART_Receive_IT(&huart2, &rx_data3, 1);
   }
+	else
+	{
+		//print error message
+		sprintf(buffer, "Command not recieved. Use USART2/USART3.\n");
+		UART_print(buffer);
+		return;
+	}
 }
 
 /**
@@ -73,25 +93,25 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  //MX_USART2_UART_Init();
+  MX_USART2_UART_Init();
   MX_TIM2_Init();
-  MX_USART3_UART_Init();
+  //MX_USART3_UART_Init();
 	
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 	
 	// Start receiving via interrupt
-  //HAL_UART_Receive_IT(&huart2, &rx_data2, 1);
-	HAL_UART_Receive_IT(&huart3, &rx_data3, 1);
+  HAL_UART_Receive_IT(&huart2, &rx_data2, 1);
+	//HAL_UART_Receive_IT(&huart3, &rx_data3, 1);
 	
   while (1)
   {
-		//check if bluetooth is recieving
-		//sprintf(buffer, "bluetooth recieving: %c\n", rx_data2);
-		//UART_print(buffer);
-		
 		//check if termite is recieving
-		sprintf(buffer, "termite recieving: %c\n", rx_data3);
+		sprintf(buffer, "termite recieving: %c\r\n", rx_data2);
 		UART_print(buffer);
+		
+		//check if bluetooth is recieving
+		//sprintf(buffer, "bluetooth recieving: %c\n", rx_data3);
+		//UART_print(buffer);
 		
 		/*
 		//writes to CCR1 and set the pulse width for the PWM signal
