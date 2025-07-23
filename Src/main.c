@@ -15,50 +15,49 @@
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
+
 #include "main.h"
 #include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
+#include <stdio.h>
+#include <string.h>
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+static char buffer[IO_SIZE];
 
-/* USER CODE END Includes */
+static uint8_t rx_data2;
+static uint8_t rx_data3;
 
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
-
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-/* USER CODE BEGIN PFP */
 
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
+void UART_motor_control(UART_HandleTypeDef *huart){
+	 if (huart == &huart2){
+    if (rx_data2 == 'B' || rx_data2 == 'b')  //'B' triggers bloom
+    {
+				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2650);  // Servo rotates to ~180°
+    }
+		else if (rx_data2 == 'C' || rx_data2 == 'c')  //'C' closes flower
+    {
+				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 700);  // Servo back to ~0°
+    }
+    // Continue UART listening
+		HAL_UART_Receive_IT(&huart2, &rx_data2, 1);
+  }
+	 
+	 if (huart == &huart3){
+    if (rx_data3 == 'B' || rx_data3 == 'b')  //'B' triggers bloom
+    {
+				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2650);  // Servo rotates to ~180°
+    }
+		else if (rx_data3 == 'C' || rx_data3 == 'c')  //'C' closes flower
+    {
+				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 700);  // Servo back to ~0°
+    }
+    // Continue UART listening
+		HAL_UART_Receive_IT(&huart2, &rx_data3, 1);
+  }
+}
 
 /**
   * @brief  The application entry point.
@@ -66,46 +65,45 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
-
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
   /* Configure the system clock */
   SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
+	
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_USART2_UART_Init();
+  //MX_USART2_UART_Init();
   MX_TIM2_Init();
-
+  MX_USART3_UART_Init();
+	
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-
+	
+	// Start receiving via interrupt
+  //HAL_UART_Receive_IT(&huart2, &rx_data2, 1);
+	HAL_UART_Receive_IT(&huart3, &rx_data3, 1);
+	
   while (1)
   {
-		//writes to CCR1 and set the pulse width for the PWM signal
-		//Set the compare value (pulse width) of TIM2, Channel 1 to 1500 timer ticks
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2000);
-		//delay function
-		HAL_Delay(1000);
+		//check if bluetooth is recieving
+		//sprintf(buffer, "bluetooth recieving: %c\n", rx_data2);
+		//UART_print(buffer);
 		
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 1000);
+		//check if termite is recieving
+		sprintf(buffer, "termite recieving: %c\n", rx_data3);
+		UART_print(buffer);
+		
+		/*
+		//writes to CCR1 and set the pulse width for the PWM signal
+		//Set the compare value (pulse width) of TIM2, Channel 1 to 2650 timer ticks
+		//if ticks = 2700, full 360 turn
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2650); //full 180°
+		//delay function
+		HAL_Delay(3000);
+		
+		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 700); //full 0°
 		HAL_Delay(1000);
-
+		*/
   }
 
 }
