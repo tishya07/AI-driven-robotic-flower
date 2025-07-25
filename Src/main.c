@@ -68,7 +68,7 @@ void UART_motor_control(UART_HandleTypeDef *huart, uint8_t rx_data){
 		}
 		
     // Continue UART listening
-		HAL_UART_Receive_IT(&huart2, &rx_data3, 1);
+		HAL_UART_Receive_IT(&huart3, &rx_data3, 1);
   }
 	else
 	{
@@ -95,35 +95,27 @@ int main(void)
   MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_TIM2_Init();
-  //MX_USART3_UART_Init();
+  MX_USART3_UART_Init();
 	
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 	
 	// Start receiving via interrupt
   HAL_UART_Receive_IT(&huart2, &rx_data2, 1);
-	//HAL_UART_Receive_IT(&huart3, &rx_data3, 1);
+	HAL_UART_Receive_IT(&huart3, &rx_data3, 1);
 	
   while (1)
   {
+		rx_data2 = USART2->RDR;
+		rx_data3 = USART3->RDR;
+		
 		//check if termite is recieving
 		sprintf(buffer, "termite recieving: %c\r\n", rx_data2);
 		UART_print(buffer);
 		
 		//check if bluetooth is recieving
-		//sprintf(buffer, "bluetooth recieving: %c\n", rx_data3);
-		//UART_print(buffer);
+		sprintf(buffer, "bluetooth recieving: %c\n", rx_data3);
+		UART_print(buffer);
 		
-		/*
-		//writes to CCR1 and set the pulse width for the PWM signal
-		//Set the compare value (pulse width) of TIM2, Channel 1 to 2650 timer ticks
-		//if ticks = 2700, full 360 turn
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2650); //full 180°
-		//delay function
-		HAL_Delay(3000);
-		
-		__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 700); //full 0°
-		HAL_Delay(1000);
-		*/
   }
 
 }
@@ -177,9 +169,6 @@ void SystemClock_Config(void)
   }
 }
 
-/* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
 
 /**
   * @brief  This function is executed in case of error occurrence.
@@ -187,13 +176,11 @@ void SystemClock_Config(void)
   */
 void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1)
   {
   }
-  /* USER CODE END Error_Handler_Debug */
 }
 #ifdef USE_FULL_ASSERT
 /**

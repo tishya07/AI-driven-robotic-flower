@@ -32,7 +32,8 @@ static char pending[IO_SIZE];
 static uint32_t pending_size = 0;
 static uint8_t uart_busy = 0;
 
-
+static uint8_t rx_data2;
+static uint8_t rx_data3;
 
 void MX_USART2_UART_Init(void)
 {
@@ -231,51 +232,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
   }
 }
 
-/*
-void UART_print(char* data)
-{
-	uint32_t length = strlen(data);
-	
-	//manually trigger first transfer
-	//HAL_UART_Transmit_DMA(&huart2, &data, length);
-	HAL_UART_Transmit_DMA(&huart3, (uint8_t*)data, length);
-
-	//Transfer char array to buffer
-	//Check DMA status. If DMA is ready, send data
-	if (__HAL_DMA_GET_FLAG(&hdma_usart2_tx, DMA_FLAG_TC7)){
-		for (int i=0; i<length; i++){
-			active[i] = data[i];
-		}
-			DMA1_Channel7->CMAR = (uint32_t) active;
-		  DMA1_Channel7->CNDTR = length;
-		
-			DMA1_Channel7->CPAR = (uint32_t)&(USART2->TDR);
-			//DMA1_Channel7->CCR |= DMA_CCR_EN; // manual start
-	}
-	else if (__HAL_DMA_GET_FLAG(&hdma_usart3_tx, DMA_FLAG_TC2)){
-		for (int i=0; i<length; i++){
-			active[i] = data[i];
-		}
-			DMA1_Channel2->CMAR = (uint32_t) active;
-		  DMA1_Channel2->CNDTR = length;
-		
-			DMA1_Channel2->CPAR = (uint32_t)&(USART3->TDR);
-			//DMA1_Channel2->CCR |= DMA_CCR_EN; // manual start
-	}
-	//If DMA is not ready, put the data aside
-	else{ 
-		for (int i=0; i<length; i++){
-			pending[i] = data[i];
-		}
-		pending_size = length;
-	}
-	
-	//reset state
-	HAL_UART_TxCpltCallback(&huart2);
-	//HAL_UART_TxCpltCallback(&huart3);
-}
-*/
-
 void UART_print(char* data) {
     uint32_t length = strlen(data);
 
@@ -283,6 +239,7 @@ void UART_print(char* data) {
         uart_busy = 1;
         memcpy(active, data, length);
         HAL_UART_Transmit_DMA(&huart2, (uint8_t*)active, length);
+				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)active, length);
     } else {
         // DMA busy, save for later
         memcpy(pending, data, length);
@@ -312,26 +269,5 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
             uart_busy = 0;
         }
     }
-}
-
-
-
-void on_complete_transfer(void){
-		if (pending_size > 0) {
-			
-			for (int i=0; i < pending_size; i++){
-				active[i] = pending[i];
-			}
-
-        // Set active size for DMA transfer
-        uint32_t size = pending_size;
-        pending_size = 0;
-
-        // Set memory address and transfer count
-        tx->CMAR = (uint32_t)active;
-        tx->CNDTR = size;
-
-        // Enable DMA channel again
-        tx->CCR |= DMA_CCR_EN;
-    }
+		HAL_UART_Receive_IT(&huart2, &rx_data2, 1);
 }
