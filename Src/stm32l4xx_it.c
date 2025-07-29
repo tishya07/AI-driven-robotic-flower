@@ -143,6 +143,7 @@ void DMA1_Channel7_IRQHandler(void)
   */
 void USART2_IRQHandler(void)
 {
+	/*
 	// When complete sending data, invoke on_complete_transfer
 	if ((USART2->ISR & USART_ISR_RXNE) || (USART2->ISR & USART_ISR_ORE)){
 		USART2->ICR |= USART_ICR_ORECF;  // Clear overrun
@@ -155,6 +156,7 @@ void USART2_IRQHandler(void)
 		// trigger motor
 		UART_motor_control(&huart2, rx_data2);
 	} 
+	*/
 	
 	HAL_UART_IRQHandler(&huart2);
 }
@@ -167,10 +169,10 @@ void USART3_IRQHandler(void)
 	// When complete sending data, invoke on_complete_transfer
 	if ((USART3->ISR & USART_ISR_RXNE) || (USART3->ISR & USART_ISR_ORE)){
 		USART3->ICR |= USART_ICR_ORECF;  // Clear overrun
-    uint8_t ch = USART3->RDR;
+    uint8_t rx_data = USART3->RDR;
 		
 		// trigger motor
-		UART_motor_control(&huart3, ch);
+		UART_motor_control(&huart3, rx_data);
 	} 
 	
 	HAL_UART_IRQHandler(&huart3);

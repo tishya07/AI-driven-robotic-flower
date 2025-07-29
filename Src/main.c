@@ -32,7 +32,7 @@ static uint8_t rx_data3;
 void SystemClock_Config(void);
 
 void UART_motor_control(UART_HandleTypeDef *huart, uint8_t rx_data){
-	 if (huart == &huart2){
+	if (huart == &huart3){
     if (rx_data == 'B' || rx_data == 'b')  //'B' triggers bloom
     {
 				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2650);  // Servo rotates to ~180°
@@ -44,28 +44,11 @@ void UART_motor_control(UART_HandleTypeDef *huart, uint8_t rx_data){
 		else
 		{
 				//print error message
-				sprintf(buffer, "Command not recieved. Type 'b' or 'c'.\n");
-				UART_print(buffer);
+				sprintf(buffer, "Command not recieved.\r\n");
+				//UART_print(buffer);
 		}
-		
-    // Continue UART listening
-		HAL_UART_Receive_IT(&huart2, &rx_data2, 1);
-  }
-	else if (huart == &huart3){
-    if (rx_data3 == 'B' || rx_data3 == 'b')  //'B' triggers bloom
-    {
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 2650);  // Servo rotates to ~180°
-    }
-		else if (rx_data3 == 'C' || rx_data3 == 'c')  //'C' closes flower
-    {
-				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 700);  // Servo back to ~0°
-    }
-		else
-		{
-				//print error message
-				sprintf(buffer, "Command not recieved. Type 'b' or 'c'.\n");
-				UART_print(buffer);
-		}
+		//log to termite (USART2)
+		HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
 		
     // Continue UART listening
 		HAL_UART_Receive_IT(&huart3, &rx_data3, 1);
@@ -73,7 +56,7 @@ void UART_motor_control(UART_HandleTypeDef *huart, uint8_t rx_data){
 	else
 	{
 		//print error message
-		sprintf(buffer, "Command not recieved. Use USART2/USART3.\n");
+		sprintf(buffer, "Command not recieved. Use USART3.\r\n");
 		UART_print(buffer);
 		return;
 	}
@@ -100,21 +83,23 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 	
 	// Start receiving via interrupt
-  HAL_UART_Receive_IT(&huart2, &rx_data2, 1);
+  //HAL_UART_Receive_IT(&huart2, &rx_data2, 1);
 	HAL_UART_Receive_IT(&huart3, &rx_data3, 1);
 	
   while (1)
   {
-		rx_data2 = USART2->RDR;
+		//rx_data2 = USART2->RDR;
 		rx_data3 = USART3->RDR;
 		
 		//check if termite is recieving
-		sprintf(buffer, "termite recieving: %c\r\n", rx_data2);
-		UART_print(buffer);
+		//sprintf(buffer, "termite recieving: %c\r\n", rx_data2);
+		//UART_print(buffer);
 		
 		//check if bluetooth is recieving
-		sprintf(buffer, "bluetooth recieving: %c\n", rx_data3);
-		UART_print(buffer);
+		sprintf(buffer, "bluetooth recieving: %c\r\n", rx_data3);
+		//UART_print(buffer);
+		HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+		//HAL_Delay(100);
 		
   }
 
