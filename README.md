@@ -1,4 +1,4 @@
-# AI-Driven Biomimetic Flower
+# AI-Driven Robotic Flower
 A robotic flower that responds to stimuli in real time.
 
 ## How It Works
