@@ -34,7 +34,7 @@ Servo motors use PWM signals to determine their range of motion. The PWM signal 
 ## Building the Flower
 The physical design was made to look realistic to inspire a sense of awe. I combined 3D-printed parts with artificial petals from Michaels.
 
-As 3D modeling was new to me, this stage required multiple iterations. Specifically, four design versions were created before achieving a functional prototype.
+As 3D modeling was new to me, this stage required multiple iterations. Specifically, four design versions were created before achieving a functional prototype. Below are schematics for each component for this project. 
 
 Petal Gear Design:
 <img width="2146" height="1196" alt="image" src="https://github.com/user-attachments/assets/b47e656f-402b-4d13-b4ac-e1a2cf0f067b" />
