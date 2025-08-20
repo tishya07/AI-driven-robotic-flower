@@ -36,6 +36,8 @@ The physical design was made to look realistic to inspire a sense of awe. I comb
 
 As 3D modeling was new to me, this stage required multiple iterations. Specifically, four design versions were created before achieving a functional prototype.
 (insert design) 
+<img width="2146" height="1196" alt="image" src="https://github.com/user-attachments/assets/b47e656f-402b-4d13-b4ac-e1a2cf0f067b" />
+
 
 ## Tools
 - NVIDIA Jetson AGX Orin Developer Kit 
