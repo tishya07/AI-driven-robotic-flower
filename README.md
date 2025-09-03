@@ -1,7 +1,10 @@
 # AI-Driven Robotic Flower
 A robotic flower that responds to stimuli in real time.
 
-https://github.com/user-attachments/assets/f6e53907-f9c4-4aa7-9526-84726b651007
+<div align="center">
+<video src=https://github.com/user-attachments/assets/f6e53907-f9c4-4aa7-9526-84726b651007>
+</video>
+</div>
 
 ## How It Works
 The flower reacts to stimuli through 3 main components: 
