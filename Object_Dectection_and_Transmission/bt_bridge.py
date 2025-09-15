@@ -24,5 +24,5 @@ while True:
     except FileNotFoundError:
         print("Waiting for command file...")
     
-    time.sleep(5)
+    time.sleep(.1)
 
